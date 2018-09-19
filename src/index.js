@@ -18,13 +18,12 @@ class Keyboard extends React.Component {
   constructor(props) {
     super(props);
 
-    // this.audioEl = null;
     this.audioFile = {};
     this.loadedAudio = null;
   }
 
-  handleChange = e => {
-    const file = e.target.files[0];
+  handleChange = event => {
+    const file = event.target.files[0];
     const reader = new FileReader();
 
     reader.addEventListener("load", () => {
@@ -44,29 +43,14 @@ class Keyboard extends React.Component {
           this.setState({ duration: this.loadedAudio.duration() });
         }
       });
-      // setTimeout(() => {
-      //   console.log(music.duration());
-      //   this.setState({ duration: music.duration() }, () => {
-      //     console.log(this.state);
-      //   });
-      // }, 50);
     });
 
     reader.readAsDataURL(file);
   };
 
   play = key => {
-    // console.log(this.foo);
-    // this.foo.pause();
-    this.foo.play("foo");
-    // console.log(key);
-    // const delay = key.end - key.start;
-    // this.audioEl.currentTime = key.start;
-    // this.audioEl.play();
-
-    // setTimeout(() => {
-    //   this.audioEl.pause();
-    // }, delay * 1000);
+    this.loadedAudio.stop();
+    this.loadedAudio.play(key);
   };
 
   addKey = event => {
@@ -86,31 +70,34 @@ class Keyboard extends React.Component {
         ...this.state.sprites,
         ...keySettings
       }
-    });
+    }, () => {
+      const sprite = {};
+      Object.keys(this.state.sprites).map((item) => {
+        const currentSprite = this.state.sprites[item];
+        const delay = currentSprite.end - currentSprite.start;
+        sprite[item] = [this.state.sprites[item].start * 1000, delay * 1000];
+      });
 
-    // // Create a Howler sound
-    // this.foo = new Howl({});
+      this.loadedAudio = new Howl({
+        ...this.audioFile,
+        sprite,
+      });
+    });
 
     document.addEventListener("keypress", event => {
       if (event.key !== key) {
         return;
       }
 
-      this.play(keySettings);
+      this.play(key);
     });
   };
 
   render() {
+    const buttons = Object.keys(this.state.sprites);
     return (
       <div>
         <input type="file" name="musica" onChange={this.handleChange} />
-        {/* <audio
-          id="sound"
-          controls
-          ref={q => {
-            this.audioEl = q;
-          }}
-        /> */}
 
         {this.state.duration > 0 && (
           <div>
@@ -139,14 +126,17 @@ class Keyboard extends React.Component {
         <br />
         <br />
 
-        {/* <div>
-          <button onClick={() => this.play()}>aaa</button>
-          {this.state.sprites.map((key, i) => (
-            <button key={i} onClick={() => this.play(key)}>
-              {key.key}: {key.start} ~ {key.end}
-            </button>
-          ))}
-        </div> */}
+        <div>
+          {buttons.map((key, i) => {
+            const currentButton = this.state.sprites[key];
+
+            return (
+              <button key={i} onClick={() => this.play(key)}>
+                {key}: {currentButton.start} ~ {currentButton.end}
+              </button>
+            )
+          })}
+        </div>
       </div>
     );
   }
